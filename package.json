@@ -1,0 +1,28 @@
+{
+  "name": "ai-secure-voting-system",
+  "version": "1.0.0",
+  "description": "AI-Based Secure Online Voting System Using MERN Stack and Machine Learning",
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev:ml": "npm --prefix ml-service run dev",
+    "dev": "concurrently -n \"SERVER,CLIENT,ML\" -c \"blue,green,magenta\" \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:ml\"",
+    "seed": "node scripts/seed_database.js",
+    "verify-ledger": "node scripts/verify_ledger_cli.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "voting",
+    "security",
+    "machine-learning",
+    "mern",
+    "fastapi",
+    "blockchain-ledger",
+    "face-verification"
+  ],
+  "author": "Antigravity Engineering Pair",
+  "license": "MIT"
+}
+

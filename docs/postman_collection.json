@@ -1,0 +1,292 @@
+{
+  "info": {
+    "_postman_id": "a91b2c3d-e4f5-4a6b-8c7d-9e0f1a2b3c4d",
+    "name": "AI-Based Secure Online Voting System API",
+    "description": "Comprehensive Postman collection for the AI-Based Secure Online Voting System MERN + FastAPI stack.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "mlUrl",
+      "value": "http://127.0.0.1:8000/api/ml",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication Module",
+      "item": [
+        {
+          "name": "Register Voter",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"voterId\": \"VTR-998877\",\n  \"password\": \"SecurePass@123\",\n  \"faceImage\": \"data:image/jpeg;base64,...\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/verify-otp", "host": ["{{baseUrl}}"], "path": ["auth", "verify-otp"] }
+          }
+        },
+        {
+          "name": "Login (Admin / Voter)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin@securevote.org\",\n  \"password\": \"Admin@12345\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Current Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Refresh Access Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"...\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/refresh-token", "host": ["{{baseUrl}}"], "path": ["auth", "refresh-token"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Elections Module",
+      "item": [
+        {
+          "name": "List All Elections",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/elections", "host": ["{{baseUrl}}"], "path": ["elections"] }
+          }
+        },
+        {
+          "name": "Get Election Details",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/elections/:id", "host": ["{{baseUrl}}"], "path": ["elections", ":id"] }
+          }
+        },
+        {
+          "name": "Get Election Results (Closed Election)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/elections/:id/results", "host": ["{{baseUrl}}"], "path": ["elections", ":id", "results"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Voting & Ledger Module",
+      "item": [
+        {
+          "name": "Biometric Pre-Verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"liveImage\": \"data:image/jpeg;base64,...\",\n  \"frames\": [\"data:image/jpeg;base64,...\", \"data:image/jpeg;base64,...\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/votes/verify-biometrics", "host": ["{{baseUrl}}"], "path": ["votes", "verify-biometrics"] }
+          }
+        },
+        {
+          "name": "Cast Secret Ballot",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"electionId\": \"6ae81eb02f0e68330e6f95ad\",\n  \"candidateId\": \"cand_alice_chen\",\n  \"liveImage\": \"data:image/jpeg;base64,...\",\n  \"telemetry\": {\n    \"loginFrequency24h\": 1,\n    \"ipChangeCount\": 0,\n    \"timeToVoteSeconds\": 28.5,\n    \"failedAttemptsRatio\": 0.0\n  }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/votes/cast", "host": ["{{baseUrl}}"], "path": ["votes", "cast"] }
+          }
+        },
+        {
+          "name": "Verify Receipt on Hash Ledger",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/votes/verify-receipt/REC-AA11BB22CC33DD44", "host": ["{{baseUrl}}"], "path": ["votes", "verify-receipt", "REC-AA11BB22CC33DD44"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Module",
+      "item": [
+        {
+          "name": "Get Dashboard Statistics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/dashboard-stats", "host": ["{{baseUrl}}"], "path": ["admin", "dashboard-stats"] }
+          }
+        },
+        {
+          "name": "List Voter Registrations (KYC)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/voters?status=pending", "host": ["{{baseUrl}}"], "path": ["admin", "voters"], "query": [{ "key": "status", "value": "pending" }] }
+          }
+        },
+        {
+          "name": "Approve or Reject Voter",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"rejectionReason\": \"\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/voters/:id/status", "host": ["{{baseUrl}}"], "path": ["admin", "voters", ":id", "status"] }
+          }
+        },
+        {
+          "name": "Create Election",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"2026 Faculty Senate Election\",\n  \"description\": \"Election of faculty senate representatives\",\n  \"startDate\": \"2026-11-05T00:00:00Z\",\n  \"endDate\": \"2026-11-12T00:00:00Z\",\n  \"candidates\": [\n    { \"name\": \"Dr. Aris\", \"party\": \"Science Alliance\", \"manifesto\": \"Research first\" },\n    { \"name\": \"Dr. Gomez\", \"party\": \"Humanities First\", \"manifesto\": \"Student mentorship\" }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/elections", "host": ["{{baseUrl}}"], "path": ["admin", "elections"] }
+          }
+        },
+        {
+          "name": "Audit Cryptographic Ledger",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/elections/:id/audit-ledger", "host": ["{{baseUrl}}"], "path": ["admin", "elections", ":id", "audit-ledger"] }
+          }
+        },
+        {
+          "name": "View Fraud Alerts",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/fraud-alerts", "host": ["{{baseUrl}}"], "path": ["admin", "fraud-alerts"] }
+          }
+        },
+        {
+          "name": "View Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/audit-logs", "host": ["{{baseUrl}}"], "path": ["admin", "audit-logs"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Python ML Microservice",
+      "item": [
+        {
+          "name": "Extract Face Embedding (128-d)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"image\": \"data:image/jpeg;base64,...\"\n}"
+            },
+            "url": { "raw": "{{mlUrl}}/extract-embedding", "host": ["{{mlUrl}}"], "path": ["extract-embedding"] }
+          }
+        },
+        {
+          "name": "Compare Face Embeddings",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"live_image\": \"data:image/jpeg;base64,...\",\n  \"registered_embedding\": [0.05, -0.02, 0.11, ...]\n}"
+            },
+            "url": { "raw": "{{mlUrl}}/verify-face", "host": ["{{mlUrl}}"], "path": ["verify-face"] }
+          }
+        },
+        {
+          "name": "Liveness Anti-Spoofing Check",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"frames\": [\"data:image/jpeg;base64,...\", \"data:image/jpeg;base64,...\"]\n}"
+            },
+            "url": { "raw": "{{mlUrl}}/liveness-check", "host": ["{{mlUrl}}"], "path": ["liveness-check"] }
+          }
+        },
+        {
+          "name": "Detect Fraudulent Behavior (Isolation Forest)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login_frequency_24h\": 1.0,\n  \"ip_change_count\": 0.0,\n  \"time_to_vote_seconds\": 32.0,\n  \"failed_attempts_ratio\": 0.0,\n  \"hour_of_day\": 14.0\n}"
+            },
+            "url": { "raw": "{{mlUrl}}/detect-fraud", "host": ["{{mlUrl}}"], "path": ["detect-fraud"] }
+          }
+        },
+        {
+          "name": "Get ML Model Metrics",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{mlUrl}}/metrics", "host": ["{{mlUrl}}"], "path": ["metrics"] }
+          }
+        }
+      ]
+    }
+  ]
+}
+

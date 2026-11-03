@@ -1,0 +1,22 @@
+{
+  "model_name": "Isolation Forest Anomaly Classifier",
+  "is_trained": true,
+  "test_samples": 2650,
+  "actual_anomalies": 150,
+  "detected_anomalies": 148,
+  "accuracy": 0.9706,
+  "precision": 0.7432,
+  "recall": 0.7333,
+  "f1_score": 0.7383,
+  "roc_auc": 0.9885,
+  "confusion_matrix": [
+    [
+      2462,
+      38
+    ],
+    [
+      40,
+      110
+    ]
+  ]
+}
