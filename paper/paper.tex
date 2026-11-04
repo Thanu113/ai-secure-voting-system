@@ -7,9 +7,11 @@
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
-\usepackage{booktabs}
 \usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{array}
 \usepackage{url}
+\usepackage{microtype}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -18,7 +20,38 @@
 
 \title{AI-Based Secure Online Voting System Using MERN Stack and Machine Learning}
 
-\author{\IEEEauthorblockN{Anonymous Author(s) for Double-Blind Review}}
+\author{
+\IEEEauthorblockN{K. Durga Charan}
+\IEEEauthorblockA{\textit{Dept. of Computer Science \& Technology} \\
+\textit{Madanapalle Inst. of Tech. \& Science}\\
+Madanapalle, Andhra Pradesh, India \\
+durgacharankondabathula@gmail.com}
+\and
+\IEEEauthorblockN{Pagadala Thanuja}
+\IEEEauthorblockA{\textit{Dept. of Computer Science \& Technology} \\
+\textit{Madanapalle Inst. of Tech. \& Science}\\
+Madanapalle, Andhra Pradesh, India \\
+pagadalathanujaa@gmail.com}
+\and
+\IEEEauthorblockN{Dhandu Shivani}
+\IEEEauthorblockA{\textit{Dept. of Computer Science \& Technology} \\
+\textit{Madanapalle Inst. of Tech. \& Science}\\
+Madanapalle, Andhra Pradesh, India \\
+shivanidhandu999@gmail.com}
+\vspace{0.3cm}
+\and
+\IEEEauthorblockN{Pandrati Umesh}
+\IEEEauthorblockA{\textit{Dept. of Computer Science \& Technology} \\
+\textit{Madanapalle Inst. of Tech. \& Science}\\
+Madanapalle, Andhra Pradesh, India \\
+umesh63055@gmail.com}
+\and
+\IEEEauthorblockN{Paturu Vardhan Reddy}
+\IEEEauthorblockA{\textit{Dept. of Computer Science \& Technology} \\
+\textit{Madanapalle Inst. of Tech. \& Science}\\
+Madanapalle, Andhra Pradesh, India \\
+vardhan4036@gmail.com}
+}
 
 \maketitle
 
@@ -111,31 +144,40 @@ To extract a facial biometric representation that is invariant to illumination w
     \item \textbf{Face Normalization:} The input frame is converted to grayscale, equalized via Contrast Limited Adaptive Histogram Equalization (CLAHE, clip limit = 2.0, grid = $8 \times 8$), and processed by a Haar cascade detector to isolate the primary face bounding box. The cropped face region is normalized to a fixed resolution of $128 \times 128$ pixels.
     \item \textbf{Frequency Domain Transformation (DCT):} A 2D Discrete Cosine Transform (DCT-II) is applied to the normalized floating-point grayscale image $I(x, y)$:
     \begin{equation}
-        D(u, v) = \alpha(u)\alpha(v) \sum_{x=0}^{N-1}\sum_{y=0}^{N-1} I(x, y) \cos\left[\frac{\pi(2x+1)u}{2N}\right] \cos\left[\frac{\pi(2y+1)v}{2N}\right]
+    \begin{split}
+        D(u, v) = \alpha(u)\alpha(v) \sum_{x=0}^{N-1}\sum_{y=0}^{N-1} I(x, y) & \cos\left[\frac{\pi(2x+1)u}{2N}\right] \\
+        & \times \cos\left[\frac{\pi(2y+1)v}{2N}\right]
+    \end{split}
     \end{equation}
-    where $N=128$, and $\alpha(\cdot)$ is the orthonormal scaling factor.
+    where $N=128$, and the orthonormal scaling factor $\alpha(\cdot)$ is:
+    \begin{equation}
+        \alpha(u) = \begin{cases} 
+        \sqrt{\frac{1}{N}}, & u = 0 \\ 
+        \sqrt{\frac{2}{N}}, & u \ge 1 
+        \end{cases}
+    \end{equation}
     \item \textbf{Lighting Invariance via DC Zeroing:} The top-left $8 \times 8$ low-to-mid frequency coefficients capturing fundamental structural facial topology are extracted. Crucially, the direct current coefficient $D(0, 0)$—which represents average global surface luminance—is set to zero:
     \begin{equation}
-        \mathbf{f}_{\text{DCT}} = [0.0, D(0, 1), D(0, 2), \dots, D(7, 7)]^T \in \mathbb{R}^{64}
+        \mathbf{f}_{\text{DCT}} = \left[0.0, \, D(0, 1), \, D(0, 2), \, \dots, \, D(7, 7)\right]^T \in \mathbb{R}^{64}
     \end{equation}
     The vector is unit-normalized: $\hat{\mathbf{f}}_{\text{DCT}} = \mathbf{f}_{\text{DCT}} / \|\mathbf{f}_{\text{DCT}}\|_2$.
-    \item \textbf{Spatial Gradient Pooling:} In parallel, horizontal and vertical Sobel gradient operators are convolved with the equalized image to compute the edge magnitude map:
+    \item \textbf{Spatial Gradient Pooling:} In parallel, horizontal ($G_x$) and vertical ($G_y$) Sobel gradient operators are convolved with the equalized image to compute the edge magnitude map:
     \begin{equation}
-        M(x, y) = \sqrt{\left(\frac{\partial I}{\partial x}\right)^2 + \left(\frac{\partial I}{\partial y}\right)^2}
+        M(x, y) = \sqrt{G_x(x, y)^2 + G_y(x, y)^2}
     \end{equation}
-    The magnitude map is partitioned into an $8 \times 8$ regular grid (cell size $16 \times 16$ pixels). The mean gradient intensity of each cell is computed and normalized:
+    The magnitude map is partitioned into an $8 \times 8$ regular grid (cell size $16 \times 16$ pixels). The mean gradient intensity of each cell $k$ ($1 \le k \le 64$) is computed and normalized:
     \begin{equation}
         \hat{\mathbf{f}}_{\text{Sobel}} = \frac{\mathbf{f}_{\text{Sobel}}}{\|\mathbf{f}_{\text{Sobel}}\|_2} \in \mathbb{R}^{64}
     \end{equation}
-    \item \textbf{Canonical 128-d Vector Concatenation:} The composite embedding $\mathbf{v} \in \mathbb{R}^{128}$ is formed and $L_2$-normalized:
+    \item \textbf{Canonical 128-d Vector Concatenation:} The composite embedding $\mathbf{v} \in \mathbb{R}^{128}$ is formed by concatenating both 64-dimensional feature representations and applying global $L_2$-normalization:
     \begin{equation}
-        \mathbf{v} = \frac{[\hat{\mathbf{f}}_{\text{DCT}}^T, \; \hat{\mathbf{f}}_{\text{Sobel}}^T]^T}{\|[\hat{\mathbf{f}}_{\text{DCT}}^T, \; \hat{\mathbf{f}}_{\text{Sobel}}^T]^T\|_2}
+        \mathbf{v} = \frac{\left[\hat{\mathbf{f}}_{\text{DCT}}^T, \; \hat{\mathbf{f}}_{\text{Sobel}}^T\right]^T}{\left\|\left[\hat{\mathbf{f}}_{\text{DCT}}^T, \; \hat{\mathbf{f}}_{\text{Sobel}}^T\right]^T\right\|_2} \in \mathbb{R}^{128}
     \end{equation}
-    \item \textbf{Biometric Distance Formulation:} Verification compares a live embedding $\mathbf{u}$ against the registered KYC embedding $\mathbf{v}$ using Euclidean distance:
+    \item \textbf{Biometric Distance Formulation:} Verification compares a live query embedding $\mathbf{u}$ against the registered KYC template $\mathbf{v}$ using Euclidean distance:
     \begin{equation}
         d(\mathbf{u}, \mathbf{v}) = \|\mathbf{u} - \mathbf{v}\|_2 = \sqrt{\sum_{i=1}^{128}(u_i - v_i)^2}
     \end{equation}
-    A candidate is verified if and only if $d(\mathbf{u}, \mathbf{v}) \le \tau_{\text{match}}$, where $\tau_{\text{match}} = 0.76$.
+    A candidate identity is verified if and only if $d(\mathbf{u}, \mathbf{v}) \le \tau_{\text{match}}$, where the operational decision threshold is calibrated to $\tau_{\text{match}} = 0.76$.
 \end{enumerate}
 
 \subsection{Presentation Attack Detection (Liveness Analysis)}
@@ -143,14 +185,14 @@ To defeat presentation attacks using static physical paper cutouts, smartphone d
 \begin{enumerate}
     \item \textbf{Temporal Optical Micro-Motion:} For consecutive normalized face crops $C_0$ and $C_{K-1}$, the mean absolute pixel difference across all color channels is evaluated:
     \begin{equation}
-        \Delta_{\text{motion}} = \frac{1}{W \cdot H \cdot C} \sum_{x, y, c} |C_0(x, y, c) - C_{K-1}(x, y, c)|
+        \Delta_{\text{motion}} = \frac{1}{W \cdot H \cdot C} \sum_{x=1}^{W}\sum_{y=1}^{H}\sum_{c=1}^{C} |C_0(x, y, c) - C_{K-1}(x, y, c)|
     \end{equation}
     While static photographs yield $\Delta_{\text{motion}} < 0.35$ due to absence of biological motion, genuine human presence generates micro-movements, breathing variance, and optical sensor fluctuations ($\Delta_{\text{motion}} \ge 0.60$).
-    \item \textbf{Anatomical Upper-Face Band Variance (Eyeglass-Resilient Liveness):} Standard Eye Aspect Ratio (EAR) algorithms fail when voters wear spectacles due to reflections and frame occlusion. Our system defines an anatomical upper-face sub-region spanning the vertical interval $y \in [0.20 H_f, 0.52 H_f]$ and horizontal interval $x \in [0.15 W_f, 0.85 W_f]$ of the detected face bounding box. When cascade eye detection succeeds, the Eye Aspect Ratio (EAR) is computed from the vertical-to-horizontal gradient ratio:
+    \item \textbf{Anatomical Upper-Face Band Variance (Eyeglass-Resilient Liveness):} Standard Eye Aspect Ratio (EAR) algorithms fail when voters wear spectacles due to reflections and frame occlusion. Our system defines an anatomical upper-face sub-region $\Omega$ spanning the vertical interval $y \in [0.20 H_f, 0.52 H_f]$ and horizontal interval $x \in [0.15 W_f, 0.85 W_f]$ of the detected face bounding box. When cascade eye detection succeeds, the Eye Aspect Ratio (EAR) is computed from the vertical-to-horizontal gradient ratio:
     \begin{equation}
-        \text{EAR} \approx 0.25 \times \frac{\mu(|\text{Sobel}_v|)}{\mu(|\text{Sobel}_h|) + \epsilon}
+        \text{EAR} \approx 0.25 \times \frac{\mu\left(|G_y|\right)}{\mu\left(|G_x|\right) + \epsilon}
     \end{equation}
-    When cascade eye detection fails due to spectacles, the system evaluates the temporal texture difference across the anatomical eye band: $\Delta_{\text{band}} = \mu(|B_0 - B_{K-1}|)$. Liveness is confirmed if any of the following conditions hold: (i) at least one distinct blink event is observed; (ii) $\Delta_{\text{band}} \ge 0.55$; (iii) $\Delta_{\text{motion}} \ge 0.60$; or (iv) EAR temporal variance $\sigma^2_{\text{EAR}} \ge 0.00003$.
+    where $\epsilon = 10^{-6}$. When cascade eye detection fails due to spectacles, the system evaluates the temporal texture difference across the anatomical eye band: $\Delta_{\text{band}} = \mu(|B_0 - B_{K-1}|)$. Liveness is confirmed if any of the following conditions hold: (i) at least one distinct blink event is observed; (ii) $\Delta_{\text{band}} \ge 0.55$; (iii) $\Delta_{\text{motion}} \ge 0.60$; or (iv) EAR temporal variance $\sigma^2_{\text{EAR}} \ge 0.00003$.
 \end{enumerate}
 
 \subsection{Behavioral Anomaly Detection: Unsupervised Isolation Forest}
@@ -165,15 +207,15 @@ Each voting transaction collects a 5-dimensional telemetry vector $\mathbf{x} = 
     \item $x_5$: \texttt{hour\_of\_day} (Float $\in [0, 24]$) --- Local diurnal time of ballot casting.
 \end{itemize}
 
-The feature vector is normalized using standard score scaling: $z_j = (x_j - \mu_j) / \sigma_j$. The anomaly score $s(\mathbf{z}, n)$ across an ensemble of $n_{\text{tree}} = 100$ isolation trees is formulated as:
+The feature vector is normalized using standard score scaling: $z_j = (x_j - \mu_j) / \sigma_j$. The anomaly score $s(\mathbf{z}, \psi)$ across an ensemble of $n_{\text{tree}} = 100$ isolation trees is formulated as:
 \begin{equation}
-    s(\mathbf{z}, n) = 2^{-\frac{\mathbb{E}(h(\mathbf{z}))}{c(\psi)}}
+    s(\mathbf{z}, \psi) = 2^{-\frac{\mathbb{E}(h(\mathbf{z}))}{c(\psi)}}
 \end{equation}
 where $h(\mathbf{z})$ denotes the path length (number of edges traversed from root to terminating leaf node in a given tree), $\mathbb{E}(h(\mathbf{z}))$ is the expectation of $h(\mathbf{z})$ across all 100 trees, and $c(\psi)$ is the average path length of unsuccessful searches in a Binary Search Tree (BST) given subsample size $\psi$:
 \begin{equation}
     c(\psi) = 2\left(\ln(\psi - 1) + \gamma\right) - \frac{2(\psi - 1)}{\psi}
 \end{equation}
-where $\gamma \approx 0.5772156649$ is the Euler-Mascheroni constant. Anomalies are flagged whenever the decision function evaluates to negative: $f(\mathbf{z}) = -s(\mathbf{z}, \psi) - \text{offset} < 0$.
+where $\gamma \approx 0.5772156649$ is the Euler-Mascheroni constant, and $\psi = 256$ is the subsampling size. Anomalies are flagged whenever the decision function evaluates to negative: $f(\mathbf{z}) = -s(\mathbf{z}, \psi) - \text{offset} < 0$.
 
 \subsection{Cryptographic Hash-Chained Ledger \& Strict Decoupling}
 
@@ -183,7 +225,7 @@ To guarantee ballot privacy, the system strictly separates voter identity tracki
     \item \texttt{VoteRecord}: Contains \texttt{\{voterId, electionId, receiptHash, timestamp\}}. A compound unique index on \texttt{\{voterId: 1, electionId: 1\}} guarantees that any attempt by a voter to cast more than one ballot in the same election triggers a database-level duplicate key exception (HTTP 409), enforcing the one-person-one-vote rule.
     \item \texttt{Ballot}: Contains \texttt{\{electionId, candidateId, receiptHash, sequenceNumber, previousHash, blockHash, timestamp\}}. No user identifier, IP address, or session identifier is stored. The only shared attribute is \texttt{receiptHash}:
     \begin{equation}
-        \text{Receipt} = \text{"REC-" } \|\, \text{SHA256}(\text{voterId} \,\|\, \text{electionId} \,\|\, \text{salt})[:12]
+        \text{Receipt} = \text{"REC-"} \,\|\, \text{SHA256}(\text{voterId} \,\|\, \text{electionId} \,\|\, \text{salt})[:12]
     \end{equation}
     The receipt confirms ballot inclusion on the public ledger without disclosing the candidate selected, fulfilling receipt-freeness.
 \end{itemize}
@@ -191,11 +233,14 @@ To guarantee ballot privacy, the system strictly separates voter identity tracki
 \subsubsection{Linked SHA-256 Ledger Chaining}
 Each election maintains an independent append-only cryptographic ledger initialized with a Genesis block:
 \begin{equation}
-    \text{Hash}_0 = \text{SHA256}(\text{"GENESIS\_BLOCK\_"} \,\|\, \text{electionId} \,\|\, \text{createdAt})
+    \text{Hash}_0 = \text{SHA256}\left(\text{"GENESIS\_BLOCK\_"} \,\|\, \text{electionId} \,\|\, t_0\right)
 \end{equation}
 For every subsequent ballot $k \ge 1$, the block hash is computed strictly over the canonical concatenation:
 \begin{equation}
-    \text{Hash}_k = \text{SHA256}\left(\text{Hash}_{k-1} \,\|\, \text{electionId} \,\|\, \text{candidateId} \,\|\, t_k \,\|\, \text{Receipt}_k\right)
+\begin{split}
+    \text{Hash}_k = \text{SHA256}\Big(& \text{Hash}_{k-1} \,\|\, \text{electionId} \,\|\, \text{candidateId} \\
+    & \|\, t_k \,\|\, \text{Receipt}_k \Big), \quad \forall k \ge 1
+\end{split}
 \end{equation}
 where $\text{Hash}_{k-1}$ is the exact \texttt{blockHash} of sequence block $k-1$. If an insider with administrative database access modifies candidate $c_k$ or timestamp $t_k$ in Block $k$, then $\text{SHA256}(\text{Block}_k) \neq \text{Block}_{k+1}.\text{previousHash}$, permanently breaking backward continuity from block $k+1$ through the tip of the chain.
 
@@ -224,37 +269,47 @@ To satisfy modern data privacy frameworks (e.g., GDPR Right to Erasure / Article
 Because live production telemetry containing confirmed malicious electoral attacks cannot be ethically harvested without prior deployment, an empirical dataset generator was engineered in \texttt{ml-service/training/generate\_synthetic\_data.py}. The generator models $N_{\text{normal}} = 8,000$ legitimate voter records and $N_{\text{anomaly}} = 400$ malicious/bot records (4.76\% contamination). Table \ref{tab:telemetry} details the parameter ranges across both distributions.
 
 \begin{table}[htbp]
-\caption{Telemetry Feature Definitions and Distributions}
+\caption{Telemetry Feature Definitions and Empirical Parameter Ranges}
 \label{tab:telemetry}
 \centering
-\begin{tabular}{lp{2.4cm}p{2.6cm}}
-\toprule
-\textbf{Feature} & \textbf{Human Range} & \textbf{Bot Range} \\
-\midrule
-$x_1$: \texttt{login\_freq\_24h} & $[1, 3]$ ($\lambda=1.2$) & $[10, 60]$ ($\lambda=25$) \\
-$x_2$: \texttt{ip\_change\_count} & $[0, 1]$ ($\lambda=0.1$) & $[3, 15]$ ($\lambda=6$) \\
-$x_3$: \texttt{time\_to\_vote\_s} & $[15.0, 180.0]$ ($\mu=45$) & $[0.5, 3.0]$ ($\mu=1.2$) \\
-$x_4$: \texttt{failed\_attempts} & $[0.0, 0.1]$ ($\mu=0.02$) & $[0.4, 1.0]$ ($\mu=0.75$) \\
-$x_5$: \texttt{hour\_of\_day} & $[8.0, 22.0]$ (Day) & $[1.0, 5.0]$ (Night burst) \\
-\bottomrule
-\end{tabular}
+\renewcommand{\arraystretch}{1.25}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|c|l|c|c|}
+\hline
+\textbf{Index} & \textbf{Telemetry Feature} & \textbf{Human Range} & \textbf{Malicious / Bot Range} \\
+\hline
+$x_1$ & \texttt{login\_freq\_24h} & $[1, 3]$ ($\lambda=1.2$) & $[10, 60]$ ($\lambda=25.0$) \\
+\hline
+$x_2$ & \texttt{ip\_change\_count} & $[0, 1]$ ($\lambda=0.1$) & $[3, 15]$ ($\lambda=6.0$) \\
+\hline
+$x_3$ & \texttt{time\_to\_vote\_seconds} & $[15.0, 180.0]$ ($\mu=45.0\text{ s}$) & $[0.5, 3.0]$ ($\mu=1.2\text{ s}$) \\
+\hline
+$x_4$ & \texttt{failed\_attempts\_ratio} & $[0.0, 0.1]$ ($\mu=0.02$) & $[0.4, 1.0]$ ($\mu=0.75$) \\
+\hline
+$x_5$ & \texttt{hour\_of\_day} & $[8.0, 22.0]$ (Diurnal) & $[1.0, 5.0]$ (Nocturnal Burst) \\
+\hline
+\end{tabular}%
+}
 \end{table}
 
 \subsection{Anomaly Detection Performance}
-The Isolation Forest model was evaluated on a strictly isolated test partition of 2,650 sessions (2,500 normal samples, 150 anomalous samples). Table \ref{tab:confusion} presents the resulting confusion matrix.
+The Isolation Forest model was evaluated on a strictly isolated test partition of 2,650 sessions (2,500 normal samples, 150 anomalous samples). Table \ref{tab:confusion} presents the resulting confusion matrix with complete grid lines.
 
 \begin{table}[htbp]
-\caption{Isolation Forest Confusion Matrix ($N = 2,650$)}
+\caption{Isolation Forest Confusion Matrix on Test Partition ($N = 2,650$)}
 \label{tab:confusion}
 \centering
-\begin{tabular}{lccr}
-\toprule
- & \textbf{Pred. Normal} & \textbf{Pred. Anomaly} & \textbf{Total} \\
-\midrule
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Ground Truth} & \textbf{Pred. Normal} & \textbf{Pred. Anomaly} & \textbf{Class Total} \\
+\hline
 \textbf{Actual Normal} & \textbf{2,462} ($TN$) & \textbf{38} ($FP$) & 2,500 \\
+\hline
 \textbf{Actual Anomaly} & \textbf{40} ($FN$) & \textbf{110} ($TP$) & 150 \\
-\textbf{Total Predicted} & 2,502 & 148 & 2,650 \\
-\bottomrule
+\hline
+\textbf{Total Predicted} & \textbf{2,502} & \textbf{148} & \textbf{2,650} \\
+\hline
 \end{tabular}
 \end{table}
 
@@ -262,17 +317,23 @@ The Isolation Forest model was evaluated on a strictly isolated test partition o
 \caption{Anomaly Detection Empirical Performance Metrics}
 \label{tab:metrics}
 \centering
-\begin{tabular}{lcc}
-\toprule
-\textbf{Metric} & \textbf{Measured Score} & \textbf{Design Target} \\
-\midrule
-Classification Accuracy & \textbf{97.06\%} & $\ge 95.0\%$ \\
-ROC-AUC Score & \textbf{0.9885} & $\ge 0.950$ \\
-Precision (Anomaly Class) & \textbf{74.32\%} & $\ge 70.0\%$ \\
-Recall (Anomaly Class) & \textbf{73.33\%} & $\ge 70.0\%$ \\
-$F_1$-Score & \textbf{73.83\%} & $\ge 70.0\%$ \\
-False Positive Rate ($FPR$) & \textbf{1.52\%} & $\le 3.0\%$ \\
-\bottomrule
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Evaluation Metric} & \textbf{Mathematical Definition} & \textbf{Measured} & \textbf{Design Target} \\
+\hline
+Accuracy & $\frac{TP + TN}{P + N}$ & \textbf{97.06\%} & $\ge 95.0\%$ \\
+\hline
+ROC-AUC & $\int_0^1 \text{TPR}(\text{FPR}^{-1}(t))\,dt$ & \textbf{0.9885} & $\ge 0.950$ \\
+\hline
+Precision & $\frac{TP}{TP + FP}$ & \textbf{74.32\%} & $\ge 70.0\%$ \\
+\hline
+Recall & $\frac{TP}{TP + FN}$ & \textbf{73.33\%} & $\ge 70.0\%$ \\
+\hline
+$F_1$-Score & $2 \cdot \frac{\text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}$ & \textbf{73.83\%} & $\ge 70.0\%$ \\
+\hline
+False Positive Rate & $\frac{FP}{FP + TN}$ & \textbf{1.52\%} & $\le 3.0\%$ \\
+\hline
 \end{tabular}
 \end{table}
 
@@ -280,16 +341,19 @@ As shown in Table \ref{tab:metrics}, the Isolation Forest achieves 97.06\% overa
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.42\textwidth]{confusion_matrix.png}
-\caption{Empirical Confusion Matrix of the Behavioral Anomaly Classifier.}
-\label{fig:confusion}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.42\textwidth]{roc_curve.png}
-\caption{Receiver Operating Characteristic (ROC) Curve of Isolation Forest (AUC = 0.9885).}
-\label{fig:roc}
+\begin{minipage}{0.48\columnwidth}
+    \centering
+    \includegraphics[width=\textwidth]{confusion_matrix.png}
+    \caption{Empirical Confusion Matrix of Anomaly Classifier.}
+    \label{fig:confusion}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\columnwidth}
+    \centering
+    \includegraphics[width=\textwidth]{roc_curve.png}
+    \caption{ROC Curve of Isolation Forest (AUC = 0.9885).}
+    \label{fig:roc}
+\end{minipage}
 \end{figure}
 
 Fig. \ref{fig:confusion} and Fig. \ref{fig:roc} illustrate the dominant diagonal classification and near-optimal ROC discriminative curve generated during training evaluation.
@@ -298,19 +362,25 @@ Fig. \ref{fig:confusion} and Fig. \ref{fig:roc} illustrate the dominant diagonal
 Table \ref{tab:biometric} summarizes pairwise Euclidean distances across live sessions. Setting $\tau_{\text{match}} = 0.76$ provides clean separation between genuine voters ($d \le 0.725$) and unauthorized imposters ($d \ge 0.819$).
 
 \begin{table}[htbp]
-\caption{Pairwise Biometric Distance Distribution}
+\caption{Pairwise Biometric Distance Calibration Across Camera Sessions}
 \label{tab:biometric}
 \centering
-\begin{tabular}{lcc}
-\toprule
-\textbf{Pairing Type} & \textbf{Distance Range ($d$)} & \textbf{Decision ($\tau=0.76$)} \\
-\midrule
-Intra-Person (Identical pose) & $[0.000, 0.240]$ & Verified (100\%--84\%) \\
-Intra-Person (Lighting/glasses) & $[0.462, 0.725]$ & Verified (69\%--52\%) \\
-Inter-Person (Similar room) & $[0.819, 1.010]$ & Rejected (Flagged) \\
-Inter-Person (Distinct subjects) & $[1.292, 1.447]$ & Rejected (Orthogonal) \\
-\bottomrule
-\end{tabular}
+\renewcommand{\arraystretch}{1.25}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Comparison Pairing Type} & \textbf{Distance Range ($d$)} & \textbf{Classification} & \textbf{Empirical Decision} \\
+\hline
+Intra-Person (Identical session) & $[0.000, 0.240]$ & Genuine & Verified ($\tau \le 0.76$) \\
+\hline
+Intra-Person (Lighting / Glasses) & $[0.462, 0.725]$ & Genuine & Verified ($\tau \le 0.76$) \\
+\hline
+Inter-Person (Similar room / scene) & $[0.819, 1.010]$ & Imposter & Rejected / Flagged ($d > 0.76$) \\
+\hline
+Inter-Person (Distinct subjects) & $[1.292, 1.447]$ & Imposter & Rejected / Blocked ($d > 0.76$) \\
+\hline
+\end{tabular}%
+}
 \end{table}
 
 \subsection{Ledger Verification Latency}
@@ -320,21 +390,29 @@ Integrity verification using \texttt{scripts/verify\_ledger\_cli.js} verified 1,
 Table \ref{tab:stride} summarizes the platform's defense coverage evaluated against Microsoft's STRIDE framework \cite{hernan2006threat}.
 
 \begin{table}[htbp]
-\caption{STRIDE Threat Evaluation and Mitigations}
+\caption{STRIDE Threat Model Evaluation and Security Countermeasures}
 \label{tab:stride}
 \centering
-\begin{tabularx}{\columnwidth}{lX}
-\toprule
-\textbf{Threat} & \textbf{System Defense \& Mitigation} \\
-\midrule
-\textbf{S}poofing & 128-d DCT/Sobel face verification ($d \le 0.76$) + temporal liveness + salted email OTP. \\
-\textbf{T}ampering & Linked SHA-256 hash chaining; CLI ledger auditor detects alterations instantly. \\
-\textbf{R}epudiation & Derived cryptographic receipt tokens + immutable audit log entries. \\
-\textbf{I}nfo Disclosure & Strict structural decoupling: \texttt{VoteRecord} separated from anonymized \texttt{Ballot}. \\
-\textbf{D}enial of Service & Rate limiting (200 req/15 min) + Isolation Forest flagging high-velocity bot bursts. \\
-\textbf{E}levation of Priv. & Cryptographically signed JWTs with RBAC claims enforced at middleware. \\
-\bottomrule
-\end{tabularx}
+\renewcommand{\arraystretch}{1.3}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|c|l|p{5.5cm}|}
+\hline
+\textbf{Category} & \textbf{STRIDE Threat} & \textbf{System Architectural Defense \& Mitigation} \\
+\hline
+\textbf{S} & Spoofing & 128-d DCT/Sobel face verification ($d \le 0.76$) paired with temporal multi-frame liveness and HMAC-salted email OTP. \\
+\hline
+\textbf{T} & Tampering & Backward-linked SHA-256 cryptographic hash chaining; standalone CLI auditor verifies block integrity in $<45\text{ ms}$. \\
+\hline
+\textbf{R} & Repudiation & Deterministic cryptographic receipt tokens (\texttt{REC-}$\dots$) and immutable append-only audit trail logs. \\
+\hline
+\textbf{I} & Information Disclosure & Strict schema decoupling: \texttt{VoteRecord} (eligibility) is mathematically isolated from anonymized \texttt{Ballot}. \\
+\hline
+\textbf{D} & Denial of Service & Layered token-bucket rate limiting ($200\text{ req}/15\text{ min}$) and real-time Isolation Forest bot-burst mitigation. \\
+\hline
+\textbf{E} & Elevation of Privilege & Role-Based Access Control (RBAC) enforced via cryptographically signed stateless JWT claims at API gateway. \\
+\hline
+\end{tabular}%
+}
 \end{table}
 
 \section{Discussion, Limitations, and Ethics}
@@ -357,4 +435,3 @@ Future extensions will incorporate Zero-Knowledge Succinct Non-Interactive Argum
 \bibliography{references}
 
 \end{document}
-
